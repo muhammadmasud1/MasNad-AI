@@ -1,0 +1,248 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.3/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        }
+        .neon-shadow {
+            box-shadow: 0 0 15px rgba(74, 222, 128, 0.3);
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 0.4; }
+            100% { opacity: 0.8; }
+        }
+        .chat-message {
+            display: block;
+            word-wrap: break-word;
+            margin-bottom: 2px;
+        }
+        #chatbox::-webkit-scrollbar {
+            width: 8px;
+        }
+        #chatbox::-webkit-scrollbar-track {
+            background-color: #2d3748;
+        }
+        #chatbox::-webkit-scrollbar-thumb {
+            background-color: #4a5568;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <body class="gradient-bg min-h-screen">
+        <div class="container mx-auto px-4 h-screen relative max-w-2xl">
+            <div class="py-6 px-8 h-full flex flex-col">
+                <!-- Header -->
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 mb-2">
+                        MasNad AI
+                    </h1>
+                    <p class="text-gray-400">Describe your vision, we'll paint it with pixels</p>
+                </div>
+    
+                <!-- Chat Container -->
+                <div id="chatbox" class="flex-1 overflow-y-auto mb-4 space-y-4 rounded-xl bg-gray-800 p-4 shadow-lg"></div>
+    
+                <!-- Input Area -->
+                <div class="bg-gray-800 rounded-xl p-4 shadow-lg neon-shadow">
+                    <form id="chatForm" class="space-y-4">
+                        <div class="flex gap-2">
+                            <div class="relative flex-1">
+                                <input id="chatInput" type="text" 
+                                       class="w-full py-3 px-4 rounded-xl bg-gray-700 text-white border border-gray-600 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                       placeholder="Describe your image or type /image...">
+                                <!-- <button id="micButton" type="button" 
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-green-500 transition-colors">
+                                    <i class="fas fa-microphone"></i>
+                                </button> -->
+                            </div>
+                            <button type="submit" 
+                                    class="py-3 px-6 bg-gradient-to-r from-green-500 to-blue-500 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2">
+                                <i class="fas fa-magic"></i>
+                                
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-center gap-4 text-gray-400">
+                            <!-- <button type="button" onclick="showInfoPopup(event)" 
+                                    class="hover:text-green-500 transition-colors relative group">
+                                <i class="fas fa-info-circle"></i>
+                                <div class="absolute hidden group-hover:block -top-8 left-1/2 -translate-x-1/2 bg-gray-700 text-white px-3 py-1 rounded-lg text-sm whitespace-nowrap">
+                                    Voice command available
+                                </div>
+                            </button> -->
+                        </div>
+                    </form>
+                </div>
+            </div>
+    
+            <!-- Loading Overlay -->
+            <div id="loading" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-gray-800 p-8 rounded-xl text-center">
+                    <div class="spinner w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full mb-4"></div>
+                    <p class="text-gray-300">Painting your vision...</p>
+                </div>
+            </div>
+        </div>
+    <script>
+        function displayLargeImage(imageUrl) {
+            const largeImageContainer = document.createElement('div');
+            largeImageContainer.className = 'fixed top-0 left-0 w-screen p-2 h-screen bg-black bg-opacity-70 flex justify-center items-center z-30';
+            largeImageContainer.onclick = (e) => {
+                e.stopPropagation();
+                largeImageContainer.remove();
+            }
+
+            const largeImage = document.createElement('img');
+            largeImage.src = imageUrl;
+            largeImage.className = 'max-w-full max-h-full rounded-lg fade-in';
+
+            const downloadLargeButton = document.createElement("button");
+            downloadLargeButton.innerHTML = "Download";
+            downloadLargeButton.className = "absolute bottom-6 md:bottom-10 left-1/2 p-2 text-white rounded bg-blue-500 bg-opacity-80 hover:bg-opacity-100 transform -translate-x-1/2 transition-colors";
+            downloadLargeButton.onclick = (e) => {
+              e.stopPropagation();
+              const a = document.createElement('a');
+              a.href = imageUrl;
+              a.download = 'generated-image.png';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            };
+
+            const closeButton = document.createElement('button');
+            closeButton.innerHTML = '<i class="fas fa-times"></i>';
+            closeButton.className = 'absolute top-6 right-6 p-2 text-red-500 rounded-full bg-opacity-80 hover:bg-opacity-100 transition-colors';
+            closeButton.onclick = (e) => {
+              e.stopPropagation();
+              largeImageContainer.remove();
+            };
+
+            largeImageContainer.appendChild(largeImage);
+            largeImageContainer.appendChild(downloadLargeButton);
+            largeImageContainer.appendChild(closeButton);
+            document.body.appendChild(largeImageContainer);
+        }
+
+        const chatForm = document.getElementById("chatForm");
+        const chatInput = document.getElementById('chatInput');
+        chatInput.focus();
+        const chatbox = document.getElementById('chatbox');
+        const spinner = document.querySelector('.spinner');
+
+        function displayMessage(message, isUser) {
+            const msgElem = document.createElement('p');
+            msgElem.textContent = message;
+            msgElem.className = isUser ? 'chat-message block text-right text-white mt-2 bg-blue-500 rounded-tl-lg rounded-br-lg rounded-bl-sm px-4 py-2 fade-in' : 'chat-message block text-white mt-2 bg-gray-600 rounded-tr-lg rounded-br-lg rounded-bl-md px-4 py-2 fade-in';
+            chatbox.appendChild(msgElem);
+        }
+
+        async function callApi(apiUrl, prompt, prependPersona = false) {
+            if (prependPersona) {
+                prompt = "Follow instructions precisely! If the user asks to generate, create or make an image, photo, or picture by describing it, You will reply with '/image' + description. Otherwise, You will respond normally. Avoid additional explanations." + prompt;
+            }
+            chatInput.value = apiUrl === "https://backend.buildpicoapps.com/aero/run/image-generation-api?pk=v1-Z0FBQUFBQm5yYXdjMDNSTHJBVzVNT2pGb0xzMzZudExGa0lJclNKcld1YzAwMFZJY1hOdTZRZUN6VlF4LWF5S1Izd2hIcHpaTjZjZzdPcXVpOHZRemZ6dVQwZnBJRG8wR1E9PQ==" ? "Generating..." : "Typing...";
+            chatInput.disabled = true;
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt})
+            });
+
+            chatInput.value = "";
+            chatInput.disabled = false;
+            chatInput.focus();
+            return response.json();
+        }
+
+        function handleError(error) {
+            console.error('Error:', error);
+            displayMessage('An error occurred. Please try again.', false);
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            displayMessage(message, true);
+            chatInput.value = '';
+
+            const apiUrl = message.startsWith('/image') ? 'https://backend.buildpicoapps.com/aero/run/image-generation-api?pk=v1-Z0FBQUFBQm5yYXdjMDNSTHJBVzVNT2pGb0xzMzZudExGa0lJclNKcld1YzAwMFZJY1hOdTZRZUN6VlF4LWF5S1Izd2hIcHpaTjZjZzdPcXVpOHZRemZ6dVQwZnBJRG8wR1E9PQ=='
+                                                      : 'https://backend.buildpicoapps.com/aero/run/llm-api?pk=v1-Z0FBQUFBQm5yYXdjMDNSTHJBVzVNT2pGb0xzMzZudExGa0lJclNKcld1YzAwMFZJY1hOdTZRZUN6VlF4LWF5S1Izd2hIcHpaTjZjZzdPcXVpOHZRemZ6dVQwZnBJRG8wR1E9PQ==';
+
+            try {
+                const prependPersona = apiUrl === 'https://backend.buildpicoapps.com/aero/run/llm-api?pk=v1-Z0FBQUFBQm5yYXdjMDNSTHJBVzVNT2pGb0xzMzZudExGa0lJclNKcld1YzAwMFZJY1hOdTZRZUN6VlF4LWF5S1Izd2hIcHpaTjZjZzdPcXVpOHZRemZ6dVQwZnBJRG8wR1E9PQ==';
+                const data = await callApi(apiUrl, message.startsWith('/image') ? message.substring(6).trim() : message, prependPersona);
+                if (data.status === 'success') {
+                    if (message.toLowerCase().startsWith('/image')) {
+                        handleImageResponse(data);
+                    } else {
+                        if (data.text.trim().toLowerCase().startsWith('/image')) {
+                            const imageDescription = data.text.substring(data.text.toLowerCase().indexOf('/image') + 6).trim();
+                            const imageData = await callApi('https://backend.buildpicoapps.com/aero/run/image-generation-api?pk=v1-Z0FBQUFBQm5yYXdjMDNSTHJBVzVNT2pGb0xzMzZudExGa0lJclNKcld1YzAwMFZJY1hOdTZRZUN6VlF4LWF5S1Izd2hIcHpaTjZjZzdPcXVpOHZRemZ6dVQwZnBJRG8wR1E9PQ==', imageDescription, false);
+                            handleImageResponse(imageData);
+                        } else {
+                            displayMessage(data.text, false);
+                        }
+                    }
+                } else {
+                    handleError(data);
+                }
+
+                function handleImageResponse(imageData) {
+                    if (imageData.status === 'success') {
+                        const imageContainer = document.createElement('div');
+                        imageContainer.className = 'mx-auto mt-2 relative w-48 h-48 bg-center border-4 rounded-xl border-gray-700 bg-cover fade-in';
+                        imageContainer.style.backgroundImage = `url(${imageData.imageUrl})`;
+                        imageContainer.onclick = (e) => {
+                            e.stopPropagation();
+                            displayLargeImage(imageData.imageUrl);
+                        }
+
+                        const downloadButton = document.createElement('button');
+                        downloadButton.innerHTML = '';
+                        downloadButton.className = 'absolute bottom-0 right-0 p-2 text-yellow-500 rounded-tl hover:bg-blue-500 hover:text-white transition-colors';
+                        downloadButton.onclick = () => {
+                          const a = document.createElement('a');
+                          a.href = imageData.imageUrl;
+                          a.download = 'generated-image.png';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                        };
+
+                        imageContainer.appendChild(downloadButton);
+                        chatbox.appendChild(imageContainer);
+                    } else {
+                        handleError(imageData);
+                    }
+                }
+            } catch (error) {
+                handleError(error);
+            }
+        });
+
+        function showInfoPopup(e) {
+          e.preventDefault();
+          const tooltip = document.getElementById("infoTooltip");
+          if (tooltip.classList.contains("hidden")) {
+            tooltip.classList.remove("hidden");
+          } else {
+            tooltip.classList.add("hidden");
+          }
+        }
+    </script>
+
+</body>
+</html>
